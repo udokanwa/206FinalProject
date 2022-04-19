@@ -11,6 +11,9 @@ import unidecode
 
 # Reasearch Question: How does the number of All Stars on an NBA team affect the team's regular season performace?
 
+'''
+PHASE 1: GATHERING DATA AND STORING INTO DATABASE
+'''
 # This function will find all of the current active NBA All Stars in the NBA
 
 def find_all_AllStars():
@@ -27,7 +30,7 @@ def find_all_AllStars():
         else:
             name = unidecode.unidecode(player.find('a').getText())
             player_list.append(name)
-    # To account for 2 players who are still in the NBA but inactive in the 21-22 season, Marc Gasol and Jeff Teague
+    # To account for 2 players who are still in the NBA but inactive in the 20-21 season, Marc Gasol and Jeff Teague
     player_list.remove("Marc Gasol")
     player_list.remove("Jeff Teague")
     # 69 Active All-Stars
@@ -51,45 +54,68 @@ def count_AllStarTeams(player_list):
     print(team_dict)
     return team_dict
 
-# this function will gather data about each team from the api  
-def scrape_api(url):
+# this function will gather data about each team from the api and create a database from it  
+def scrape_api_create_database(db_filename):
+
+    #create connection and cursor to create database
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path+'/'+db_filename)
+    cur = conn.cursor()
+
     url = "https://api-nba-v1.p.rapidapi.com/standings"
 
-    querystring = {"league":"standard","season":"2022"}
+    querystring = {"league":"standard","season":"2021"}
 
     headers = {
 	"X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com",
-	"X-RapidAPI-Key": "SIGN-UP-FOR-KEY"
+	"X-RapidAPI-Key": "13de0c56camsh01cfb982e13cb52p16fd63jsn251a208fbe5f"
     }
 
     response = requests.request("GET", url, headers=headers, params=querystring)
 
-    print(response.text)
-    return(response.text)
+    info = json.loads(response.text)
+    count = 0
+    while count < 10:
+        for team in info["response"]: 
+            id = team["team"].get("id")
+            teamname = team["team"].get("name")
+            conference = team["conference"].get("name")
+            C_win = team["conference"].get("win")
+            C_loss = team["conference"].get("loss")
+            league_W_perc = float(team["win"].get("percentage"))
+            league_L_perc = float(team["loss"].get("percentage"))
+            count += 1
+
+
     
-# this function will make the connector and cursor to naviagte our database and return them as well
-def create_connector_cursor(db_filename):
-    path = os.path.dirname(os.path.abspath(__file__))
-    conn = sqlite3.connect(path+'/'+db_filename)
-    cur = conn.cursor()
-    return cur, conn
      
 '''
 This function will use the collection data to create database with each team, their number of AllStars, 
 and their season statistics. This database should be organized by number of All Stars on each team.
 '''
 def create_database(data, team_dict, cur, conn):
-    #info = json.loads(data)
 
     pass
+
+'''
+PHASE 2: PROCESSING THE DATA
+'''
+
+# This function uses JOIN to select the win/loss counts from each team by number of all stars that they have
+def calcuate_WLRatio():
+    pass
+
+# This function takes the list of tuples of W/L ratios and writes the calculated data into a CSV file
+def create_CSV():
+    pass
+
 
 
 # call all of our functions here
 def main():
     AllStarList = find_all_AllStars()
     TeamDict = count_AllStarTeams(AllStarList)
-    data = scrape_api()
-    create_database(data, TeamDict, cur, conn)
+    scrape_api_create_database("AllStars.db")
 
 if __name__ == '__main__':
     main()
