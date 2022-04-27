@@ -162,14 +162,12 @@ def scrape_api_create_database(db_filename, cur, conn):
         league_L_percs.append(league_L_perc)
         season.append(2018)
 
-    #DELETE THIS
-    cur.execute("DROP TABLE IF EXISTS Teams")
     cur.execute("CREATE TABLE IF NOT EXISTS Teams (team_id INTEGER PRIMARY KEY, conference TEXT, c_win INTEGER, c_loss INTEGER, league_W_perc FLOAT, league_L_perc FLOAT, season INTEGER)")
     cur.execute("SELECT COUNT(*) FROM Teams")
     row_count = cur.fetchone()
     if row_count[0] < 20:
         for i in range(20):
-            cur.execute("INSERT OR IGNORE INTO Teams (team_id, teamname, conference, c_win, c_loss, league_W_perc, league_L_perc, season) VALUES (?,?,?,?,?,?,?,?)",((row_count + i)), teamnames[i], conferences[i], c_wins[i], c_losses[i], league_W_percs[i], league_L_percs[i], season[i])
+            cur.execute("INSERT INTO Teams (team_id, conference, c_win, c_loss, league_W_perc, league_L_perc, season) VALUES (?,?,?,?,?,?,?)",(row_count[0] + i, conferences[i], c_wins[i], c_losses[i], league_W_percs[i], league_L_percs[i], season[i]))
         conn.commit()
     
      
@@ -184,9 +182,9 @@ def create_database(cur, conn):
     b = list(dic.values())
     # delete this after running code once
     cur.execute("DROP TABLE IF EXISTS allStars")
-    cur.execute("CREATE TABLE IF NOT EXISTS allStars (team_id INTEGER PRIMARY KEY, name TEXT, num_allstarplayers INTEGER")
+    cur.execute("CREATE TABLE IF NOT EXISTS allStars (team_id INTEGER PRIMARY KEY, name TEXT, num_allstarplayers INTEGER)")
     for i in range(len(dic.keys())):
-        cur.execute("INSERT OR IGNORE INTO allStars (name, num_allstarplayers) VALUES (?,?)",(i, b[i]))
+        cur.execute("INSERT OR IGNORE INTO allStars (team_id, name, num_allstarplayers) VALUES (?,?,?)",(i, a[i], b[i]))
     conn.commit()
 
 
